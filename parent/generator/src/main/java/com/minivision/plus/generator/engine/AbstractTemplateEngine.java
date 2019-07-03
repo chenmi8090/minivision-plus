@@ -244,14 +244,14 @@ public abstract class AbstractTemplateEngine {
                     String file = null;
                     // 指定输出路径
                     if (outDir.contains("/zip")) {
-                        file = outDir.replaceAll("/zip", "/file");
+                        file = outDir.replaceAll("/zip", "/file").replaceAll("src/main/java/","");
                     }
                     OutputStream outputStream = new FileOutputStream(file + value + ".zip");
+                    outDir = outDir.replaceAll("main/java/","");
                     // 创建zip压缩包
                     toZip(outDir, outputStream, true);
                     // 删掉普通文件夹
                     deleteDir(new File(outDir));
-                    logger.debug("文件输出目录:" + outDir);
                     return value + ".zip";
                 }
             } catch (IOException e) {
@@ -278,6 +278,7 @@ public abstract class AbstractTemplateEngine {
         try {
             zos = new ZipOutputStream(out);
             File sourceFile = new File(srcDir);
+            sourceFile.mkdir();
             compress(sourceFile, zos, sourceFile.getName(), KeepDirStructure);
             long end = System.currentTimeMillis();
         } catch (Exception e) {
