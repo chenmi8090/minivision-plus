@@ -94,7 +94,6 @@ public abstract class AbstractTemplateEngine {
                     }
                 }
 
-
                 // Mp.java
                 String entityName = tableInfo.getEntityName();
                 if (null != entityName && null != pathInfo.get(ConstVal.ENTITY_PATH)) {
@@ -174,7 +173,8 @@ public abstract class AbstractTemplateEngine {
                 // MainServiceImpl.java
                 if (null != tableInfo.getMainServiceImplName() && null != pathInfo.get(ConstVal.MAIN_SERVICE_IMPL_PATH)) {
                     String implFile = String
-                            .format((pathInfo.get(ConstVal.MAIN_SERVICE_IMPL_PATH) + File.separator + tableInfo.getMainServiceImplName() + suffixJavaOrKt()),
+                            .format((pathInfo.get(ConstVal.MAIN_SERVICE_IMPL_PATH) + File.separator + tableInfo.getMainServiceImplName()
+                                            + suffixJavaOrKt()),
                                     entityName);
                     if (isCreate(FileType.MAIN_SERVICE_IMPL, implFile)) {
                         writer(objectMap, templateFilePath(template.getMainServiceImpl()), implFile);
@@ -272,6 +272,7 @@ public abstract class AbstractTemplateEngine {
      */
     public static void toZip(String srcDir, OutputStream out, boolean KeepDirStructure)
             throws RuntimeException {
+        srcDir = srcDir.replaceAll("/zip", "");
         long start = System.currentTimeMillis();
         ZipOutputStream zos = null;
         try {
