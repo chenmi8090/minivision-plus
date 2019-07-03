@@ -1,14 +1,18 @@
 package ${package.MainServiceImpl};
 
-import org.springframework.beans.factory.annotation.Autowired;
 import ${package.MainService}.${table.mainServiceName};
 import ${package.ReqDto}.${table.reqDtoName};
 import ${package.Mapper}.${table.mapperName};
 import ${package.RespDto}.${table.respDtoName};
 import ${package.Entity}.${entity};
-import org.springframework.stereotype.Service;
 import com.minivision.common.framework.facade.exception.BusinessException;
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.BeanUtils;
+import tk.mybatis.mapper.entity.Example;
+
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * <p>
@@ -58,7 +62,7 @@ public class ${table.mainServiceImplName} implements ${table.mainServiceName} {
     }
 
     //TODO 抽象成公共方法
-    private Device toEntity(DeviceReqDTO request) {
+    private ${entity} toEntity(${table.reqDtoName} request) {
         ${entity} entity = new ${entity}();
         BeanUtils.copyProperties(request, entity);
         return entity;
