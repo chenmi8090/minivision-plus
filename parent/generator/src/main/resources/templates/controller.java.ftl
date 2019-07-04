@@ -12,6 +12,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import ${package.Service}.${table.serviceName};
 import ${package.ReqDto}.${table.reqDtoName};
+import java.util.List;
 
 <#if restControllerStyle>
 import org.springframework.web.bind.annotation.RestController;
@@ -32,7 +33,7 @@ import org.springframework.stereotype.Controller;
 <#else>
 @Controller
 </#if>
-@RequestMapping("<#if package.ModuleName??>/${package.ModuleName}</#if>/<#if controllerMappingHyphenStyle??>${controllerMappingHyphen}<#else>${table.entityPath}</#if>")
+@RequestMapping("/${package.ModuleName}")
 @Slf4j
 public class ${table.controllerName} {
 
