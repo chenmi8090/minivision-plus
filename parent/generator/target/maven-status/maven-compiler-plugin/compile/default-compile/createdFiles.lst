@@ -22,6 +22,7 @@ com\minivision\plus\generator\config\converts\SqlServerTypeConvert.class
 com\minivision\plus\generator\config\converts\PostgreSqlTypeConvert.class
 com\minivision\plus\generator\config\converts\SqliteTypeConvert.class
 com\minivision\plus\generator\config\converts\SqlServerTypeConvert$1.class
+com\minivision\plus\generator\config\util\JsonUtil.class
 com\minivision\plus\generator\engine\BeetlTemplateEngine.class
 com\minivision\plus\generator\config\rules\IColumnType.class
 com\minivision\plus\generator\config\GlobalConfig.class
@@ -35,8 +36,10 @@ com\minivision\plus\generator\config\querys\OracleQuery.class
 com\minivision\plus\generator\config\querys\SqliteQuery.class
 com\minivision\plus\generator\config\rules\FileType.class
 com\minivision\plus\generator\config\querys\MariadbQuery.class
+com\minivision\plus\generator\config\util\ResultInfo.class
 com\minivision\plus\generator\config\converts\PostgreSqlTypeConvert$1.class
 com\minivision\plus\generator\config\po\TableFill.class
+com\minivision\plus\generator\config\util\RtnMessage.class
 com\minivision\plus\generator\config\IDbQuery.class
 com\minivision\plus\generator\config\IFileCreate.class
 com\minivision\plus\generator\config\po\TableInfo.class

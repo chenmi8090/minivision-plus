@@ -15,6 +15,7 @@
  */
 package com.minivision.plus.generator;
 
+import com.minivision.common.framework.facade.exception.BusinessException;
 import com.minivision.plus.annotation.TableLogic;
 import com.minivision.plus.annotation.TableName;
 import com.minivision.plus.annotation.Version;
@@ -27,6 +28,7 @@ import com.minivision.plus.generator.config.StrategyConfig;
 import com.minivision.plus.generator.config.TemplateConfig;
 import com.minivision.plus.generator.config.builder.ConfigBuilder;
 import com.minivision.plus.generator.config.po.TableInfo;
+import com.minivision.plus.generator.config.util.JsonUtil;
 import com.minivision.plus.generator.engine.AbstractTemplateEngine;
 import com.minivision.plus.generator.engine.VelocityTemplateEngine;
 import lombok.AccessLevel;
@@ -55,32 +57,39 @@ public class AutoGenerator {
      * 配置信息
      */
     protected ConfigBuilder config;
+
     /**
      * 注入配置
      */
     @Getter(AccessLevel.NONE)
     @Setter(AccessLevel.NONE)
     protected InjectionConfig injectionConfig;
+
     /**
      * 数据源配置
      */
     private DataSourceConfig dataSource;
+
     /**
      * 数据库表配置
      */
     private StrategyConfig strategy;
+
     /**
      * 包 相关配置
      */
     private PackageConfig packageInfo;
+
     /**
      * 模板 相关配置
      */
     private TemplateConfig template;
+
     /**
      * 全局 相关配置
      */
     private GlobalConfig globalConfig;
+
     /**
      * 模板引擎
      */
@@ -90,23 +99,27 @@ public class AutoGenerator {
      * 生成代码
      */
     public String execute() {
-        logger.debug("==========================准备生成文件...==========================");
-        // 初始化配置
-        if (null == config) {
-            config = new ConfigBuilder(packageInfo, dataSource, strategy, template, globalConfig);
-            if (null != injectionConfig) {
-                injectionConfig.setConfig(config);
+        try {
+            logger.debug("==========================准备生成文件...==========================");
+            // 初始化配置
+            if (null == config) {
+                config = new ConfigBuilder(packageInfo, dataSource, strategy, template, globalConfig);
+                if (null != injectionConfig) {
+                    injectionConfig.setConfig(config);
+                }
             }
+            if (null == templateEngine) {
+                // 为了兼容之前逻辑，采用 Velocity 引擎 【 默认 】
+                templateEngine = new VelocityTemplateEngine();
+            }
+            // 模板引擎初始化执行文件输出
+            String open = templateEngine.init(this.pretreatmentConfigBuilder(config)).mkdirs().batchOutput().open();
+            logger.debug("==========================文件生成完成！！！==========================");
+            // 返回文件目录
+            return open;
+        } catch (Exception b) {
+            return JsonUtil.getErrorJson4data(b);
         }
-        if (null == templateEngine) {
-            // 为了兼容之前逻辑，采用 Velocity 引擎 【 默认 】
-            templateEngine = new VelocityTemplateEngine();
-        }
-        // 模板引擎初始化执行文件输出
-        String open = templateEngine.init(this.pretreatmentConfigBuilder(config)).mkdirs().batchOutput().open();
-        logger.debug("==========================文件生成完成！！！==========================");
-        // 返回文件目录
-        return open;
     }
 
     /**
@@ -147,7 +160,8 @@ public class AutoGenerator {
                 // 表注解
                 tableInfo.setImportPackages(TableName.class.getCanonicalName());
             }
-            if (config.getStrategyConfig().getLogicDeleteFieldName() != null && tableInfo.isLogicDelete(config.getStrategyConfig().getLogicDeleteFieldName())) {
+            if (config.getStrategyConfig().getLogicDeleteFieldName() != null && tableInfo
+                    .isLogicDelete(config.getStrategyConfig().getLogicDeleteFieldName())) {
                 // 逻辑删除注解
                 tableInfo.setImportPackages(TableLogic.class.getCanonicalName());
             }
@@ -170,11 +184,11 @@ public class AutoGenerator {
             // Boolean类型is前缀处理
             if (config.getStrategyConfig().isEntityBooleanColumnRemoveIsPrefix()) {
                 tableInfo.getFields().stream().filter(field -> "boolean".equalsIgnoreCase(field.getPropertyType()))
-                    .filter(field -> field.getPropertyName().startsWith("is"))
-                    .forEach(field -> {
-                        field.setConvert(true);
-                        field.setPropertyName(StringUtils.removePrefixAfterPrefixToLower(field.getPropertyName(), 2));
-                    });
+                        .filter(field -> field.getPropertyName().startsWith("is"))
+                        .forEach(field -> {
+                            field.setConvert(true);
+                            field.setPropertyName(StringUtils.removePrefixAfterPrefixToLower(field.getPropertyName(), 2));
+                        });
             }
         }
         return config.setTableInfoList(tableList);

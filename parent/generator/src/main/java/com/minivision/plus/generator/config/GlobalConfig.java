@@ -20,6 +20,8 @@ import com.minivision.plus.generator.config.rules.DateType;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
+import java.util.Map;
+
 /**
  * 全局配置
  *
@@ -100,6 +102,12 @@ public class GlobalConfig {
     private String facadeName;
     private String facadeImplName;
     private String controllerName;
+
+    /**
+     * 各个生成项的指定输出目录
+     */
+    private Map<String,String> outPutDirs;
+
     /**
      * 指定生成的主键的ID类型
      */

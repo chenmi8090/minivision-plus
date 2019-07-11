@@ -13,8 +13,9 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package com.minivision.plus.test.mysql.config;
+package com.minivision.plus.test.h2.config;
 
+import org.h2.Driver;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
@@ -29,20 +30,22 @@ import javax.sql.DataSource;
 import java.io.IOException;
 
 /**
- * @author miemie
- * @since 2018/6/7
+ * H2 Memory Database config
+ *
+ * @author Caratacus
+ * @since 2017/4/1
  */
 @Configuration
 @EnableTransactionManagement
-public class DBConfig {
+public class DbConfig {
 
-    @Bean("dataSource")
-    public DataSource dataSource() {
+    @Bean
+    public DataSource dataSource(){
         SimpleDriverDataSource dataSource = new SimpleDriverDataSource();
-        dataSource.setDriverClass(com.mysql.cj.jdbc.Driver.class);
-        dataSource.setUrl("jdbc:mysql://localhost:3306/mybatis_plus?useSSL=false&useUnicode=true&characterEncoding=UTF-8");
-        dataSource.setUsername("root");
-        dataSource.setPassword("123456");
+        dataSource.setDriver(new Driver());
+        dataSource.setUrl("jdbc:h2:mem:test;MODE=mysql;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE");
+        dataSource.setUsername("sa");
+        dataSource.setPassword("");
         return dataSource;
     }
 
@@ -64,8 +67,9 @@ public class DBConfig {
         ResourceDatabasePopulator resourceDatabasePopulator = new ResourceDatabasePopulator();
         resourceDatabasePopulator.setContinueOnError(false);
         resourceDatabasePopulator.addScripts(
-            new PathMatchingResourcePatternResolver().getResources("classpath:/mysql/*.sql")
+            new PathMatchingResourcePatternResolver().getResources("classpath:/h2/*.sql")
         );
         return resourceDatabasePopulator;
     }
+
 }

@@ -13,24 +13,18 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package com.minivision.plus.test.mysql.config;
+package com.minivision.plus.test.postgres.config;
 
-import com.minivision.plus.annotation.FieldFill;
 import com.minivision.plus.core.MybatisConfiguration;
 import com.minivision.plus.core.config.GlobalConfig;
-import com.minivision.plus.core.injector.AbstractMethod;
-import com.minivision.plus.core.injector.DefaultSqlInjector;
 import com.minivision.plus.core.parser.ISqlParser;
-import com.minivision.plus.extension.MybatisMapWrapperFactory;
-import com.minivision.plus.extension.injector.methods.additional.AlwaysUpdateSomeColumnById;
-import com.minivision.plus.extension.injector.methods.additional.InsertBatchSomeColumn;
-import com.minivision.plus.extension.injector.methods.additional.LogicDeleteByIdWithFill;
+import com.minivision.plus.extension.injector.LogicSqlInjector;
 import com.minivision.plus.extension.plugins.OptimisticLockerInterceptor;
 import com.minivision.plus.extension.plugins.PaginationInterceptor;
 import com.minivision.plus.extension.plugins.tenant.TenantHandler;
 import com.minivision.plus.extension.plugins.tenant.TenantSqlParser;
 import com.minivision.plus.extension.spring.MybatisSqlSessionFactoryBean;
-import com.minivision.plus.test.mysql.MysqlMetaObjectHandler;
+import com.minivision.plus.test.postgres.PostgresMetaObjectHandler;
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.expression.LongValue;
 import org.apache.ibatis.session.SqlSessionFactory;
@@ -38,7 +32,6 @@ import org.apache.ibatis.type.JdbcType;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 
 import javax.sql.DataSource;
 import java.util.ArrayList;
@@ -51,8 +44,8 @@ import java.util.List;
  * @since 2017/4/1
  */
 @Configuration
-@MapperScan({"com.minivision.plus.test.base.mapper.children", "com.minivision.plus.test.base.mapper.commons", "com.minivision.plus.test.mysql.mapper"})
-public class MybatisPlusConfig {
+@MapperScan({"com.minivision.plus.test.base.mapper.commons", "com.minivision.plus.test.base.mapper.pg"})
+public class TwoMybatisPlusConfig {
 
     @Bean("mybatisSqlSession")
     public SqlSessionFactory sqlSessionFactory(DataSource dataSource, GlobalConfig globalConfig,
@@ -62,11 +55,7 @@ public class MybatisPlusConfig {
         sqlSessionFactory.setDataSource(dataSource);
         /* 枚举扫描 */
         sqlSessionFactory.setTypeEnumsPackage("com.minivision.plus.test.base.enums");
-        /* xml扫描 */
-        sqlSessionFactory.setMapperLocations(new PathMatchingResourcePatternResolver()
-            .getResources("classpath:/mapper/*.xml"));
-        /* 扫描 typeHandler */
-//        sqlSessionFactory.setTypeHandlersPackage("com.minivision.plus.test.base.type");
+        /* entity扫描,mybatis的Alias功能 */
         MybatisConfiguration configuration = new MybatisConfiguration();
         configuration.setJdbcTypeForNull(JdbcType.NULL);
         /* 驼峰转下划线 */
@@ -75,35 +64,19 @@ public class MybatisPlusConfig {
         configuration.addInterceptor(paginationInterceptor);
         /* 乐观锁插件 */
         configuration.addInterceptor(new OptimisticLockerInterceptor());
-        /* map 下划线转驼峰 */
-        configuration.setObjectWrapperFactory(new MybatisMapWrapperFactory());
         sqlSessionFactory.setConfiguration(configuration);
         /* 自动填充插件 */
-        globalConfig.setMetaObjectHandler(new MysqlMetaObjectHandler());
+        globalConfig.setMetaObjectHandler(new PostgresMetaObjectHandler());
         sqlSessionFactory.setGlobalConfig(globalConfig);
         return sqlSessionFactory.getObject();
     }
 
     @Bean
     public GlobalConfig globalConfig() {
-        GlobalConfig conf = new GlobalConfig();
-        conf.setDbConfig(new GlobalConfig.DbConfig()
-            .setColumnFormat("`%s`"));
-        DefaultSqlInjector logicSqlInjector = new DefaultSqlInjector() {
-            /**
-             * 注入自定义全局方法
-             */
-            @Override
-            public List<AbstractMethod> getMethodList(Class<?> mapperClass) {
-                List<AbstractMethod> methodList = super.getMethodList(mapperClass);
-                methodList.add(new LogicDeleteByIdWithFill());
-                // 不要逻辑删除字段, 不要乐观锁字段, 不要填充策略是 UPDATE 的字段
-                methodList.add(new InsertBatchSomeColumn(t -> !t.isLogicDelete() && !t.isVersion() && t.getFieldFill() != FieldFill.UPDATE));
-                // 不要填充策略是 INSERT 的字段, 不要字段名是 column4 的字段
-                methodList.add(new AlwaysUpdateSomeColumnById(t -> t.getFieldFill() != FieldFill.INSERT && !t.getProperty().equals("column4")));
-                return methodList;
-            }
-        };
+        GlobalConfig conf = new GlobalConfig().setSqlParserCache(true);
+        conf.setDbConfig(new GlobalConfig.DbConfig());
+        /* 逻辑删除注入器 */
+        LogicSqlInjector logicSqlInjector = new LogicSqlInjector();
         conf.setSqlInjector(logicSqlInjector);
         return conf;
     }
@@ -131,8 +104,7 @@ public class MybatisPlusConfig {
             @Override
             public boolean doTableFilter(String tableName) {
                 // 这里可以判断是否过滤表
-                return "common_logic_data".equals(tableName) || "mysql_data".equals(tableName)
-                    || "result_map_entity".equals(tableName);
+                return "common_logic_data".equals(tableName) || "pg_data".equals(tableName);
             }
         });
         sqlParserList.add(tenantSqlParser);

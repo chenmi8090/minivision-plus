@@ -11,13 +11,7 @@
     <packaging>pom</packaging>
 
     <modules>
-        <module>core</module>
-        <module>plus</module>
-        <module>annotation</module>
-        <module>dts</module>
-        <module>extension</module>
         <module>generator</module>
-        <module>boot-starter</module>
     </modules>
 
     <groupId>com.minivision</groupId>

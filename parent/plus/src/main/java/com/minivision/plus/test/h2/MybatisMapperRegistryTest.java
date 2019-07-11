@@ -20,10 +20,10 @@ import com.minivision.plus.core.MybatisMapperRegistry;
 import com.minivision.plus.core.override.MybatisMapperMethod;
 import com.minivision.plus.core.override.MybatisMapperProxyFactory;
 import com.minivision.plus.extension.spring.MybatisSqlSessionFactoryBean;
-import com.minivision.plus.test.h2.config.DBConfig;
-import com.minivision.plus.test.h2.config.MybatisPlusConfig;
+import com.minivision.plus.test.h2.config.DbConfig;
 import com.minivision.plus.test.h2.mapper.H2StudentMapper;
 import com.minivision.plus.test.h2.mapper.H2UserMapper;
+import com.minivision.plus.test.postgres.config.TwoMybatisPlusConfig;
 import org.apache.ibatis.session.Configuration;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
@@ -49,7 +49,7 @@ import java.util.Map;
 @ExtendWith(SpringExtension.class)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @MapperScan(value = "com.minivision.plus.test.h2")
-@ContextConfiguration(classes = { MybatisMapperRegistryTest.class, DBConfig.class})
+@ContextConfiguration(classes = { MybatisMapperRegistryTest.class, DbConfig.class})
 class MybatisMapperRegistryTest extends BaseTest {
     
     private interface H2StudentChildrenMapper extends H2StudentMapper {
@@ -57,13 +57,13 @@ class MybatisMapperRegistryTest extends BaseTest {
     }
     
     @Bean
-    DBConfig dbConfig() {
-        return new DBConfig();
+    DbConfig dbConfig() {
+        return new DbConfig();
     }
     
     @Bean
-    MybatisPlusConfig mybatisPlusConfig() {
-        return new MybatisPlusConfig();
+    TwoMybatisPlusConfig mybatisPlusConfig() {
+        return new TwoMybatisPlusConfig();
     }
     
     @Bean

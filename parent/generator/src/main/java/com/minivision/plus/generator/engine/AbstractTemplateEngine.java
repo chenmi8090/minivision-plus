@@ -270,8 +270,6 @@ public abstract class AbstractTemplateEngine {
                     }
                     OutputStream outputStream = new FileOutputStream(file + value + ".zip");
                     outDir = outDir.replaceAll("/main/java/", "");
-                    logger.info("file--------------------------" + file);
-                    logger.info("outDir--------------------------" + outDir);
                     // 创建zip压缩包
                     toZip(outDir, outputStream, true);
                     // 删掉普通文件夹

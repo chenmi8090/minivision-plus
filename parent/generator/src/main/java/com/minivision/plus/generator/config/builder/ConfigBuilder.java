@@ -15,8 +15,10 @@
  */
 package com.minivision.plus.generator.config.builder;
 
+import com.minivision.common.framework.facade.exception.BusinessException;
 import com.minivision.plus.annotation.DbType;
 import com.minivision.plus.core.exceptions.MybatisPlusException;
+import com.minivision.plus.core.toolkit.CollectionUtils;
 import com.minivision.plus.core.toolkit.StringPool;
 import com.minivision.plus.core.toolkit.StringUtils;
 import com.minivision.plus.generator.InjectionConfig;
@@ -140,10 +142,19 @@ public class ConfigBuilder {
             this.template = template;
         }
         // 包配置
+        Map<String, String> outPutDirs = this.globalConfig.getOutPutDirs();
         if (null == packageConfig) {
-            handlerPackage(this.template, this.globalConfig.getOutputDir(), new PackageConfig());
+            if (CollectionUtils.isNotEmpty(outPutDirs)) {
+                handlerPackage(this.template, null, new PackageConfig(), outPutDirs);
+            } else {
+                handlerPackage(this.template, this.globalConfig.getOutputDir(), new PackageConfig(), null);
+            }
         } else {
-            handlerPackage(this.template, this.globalConfig.getOutputDir(), packageConfig);
+            if (CollectionUtils.isNotEmpty(outPutDirs)) {
+                handlerPackage(this.template, null, packageConfig, outPutDirs);
+            } else {
+                handlerPackage(this.template, this.globalConfig.getOutputDir(), packageConfig, null);
+            }
         }
         this.dataSourceConfig = dataSourceConfig;
         handlerDataSource(dataSourceConfig);
@@ -236,7 +247,7 @@ public class ConfigBuilder {
      * @param outputDir
      * @param config    PackageConfig
      */
-    private void handlerPackage(TemplateConfig template, String outputDir, PackageConfig config) {
+    private void handlerPackage(TemplateConfig template, String outputDir, PackageConfig config, Map<String, String> outputDirs) {
         // 包信息
         packageInfo = new HashMap<>(8);
         packageInfo.put(ConstVal.MODULE_NAME, config.getModuleName());
@@ -247,12 +258,16 @@ public class ConfigBuilder {
         packageInfo.put(ConstVal.SERVICE_IMPL, joinPackage(config.getParent(), config.getServiceImpl(), config.getModuleName()));
         packageInfo.put(ConstVal.MAIN_SERVICE, joinPackage(config.getParent(), config.getMainService(), config.getModuleName()));
         packageInfo.put(ConstVal.MAIN_SERVICE_IMPL, joinPackage(config.getParent(), config.getMainServiceImpl(), config.getModuleName()));
-        packageInfo.put(ConstVal.FACADE_IMPL, joinPackage(config.getParent(), config.getFacadeImpl(), config.getModuleName()));
         packageInfo.put(ConstVal.FACADE, joinPackage(config.getParent(), config.getFacade(), config.getModuleName()));
+        packageInfo.put(ConstVal.FACADE_IMPL, joinPackage(config.getParent(), config.getFacadeImpl(), config.getModuleName()));
         packageInfo.put(ConstVal.REQDTO, joinPackage(config.getParent(), config.getReqDto(), config.getModuleName()));
         packageInfo.put(ConstVal.RESPDTO, joinPackage(config.getParent(), config.getRespDto(), config.getModuleName()));
         packageInfo.put(ConstVal.CONTROLLER, joinPackage(config.getParent(), config.getController(), config.getModuleName()));
 
+        // 默认路径
+        if (StringUtils.isEmpty(outputDir)) {
+            outputDir = "/";
+        }
         // 自定义路径
         Map<String, String> configPathInfo = config.getPathInfo();
         if (null != configPathInfo) {
@@ -260,31 +275,72 @@ public class ConfigBuilder {
         } else {
             // 生成路径信息
             pathInfo = new HashMap<>(6);
-            if (template.getEntityIsGenerator()){
-                setPathInfo(pathInfo, template.getEntity(getGlobalConfig().isKotlin()), outputDir, ConstVal.ENTITY_PATH, ConstVal.ENTITY);
+            if (template.getEntityIsGenerator()) {
+                if (CollectionUtils.isNotEmpty(outputDirs) && StringUtils.isNotEmpty(outputDirs.get("entity"))) {
+                    setPathInfo(pathInfo, template.getEntity(getGlobalConfig().isKotlin()), outputDirs.get("entity"), ConstVal.ENTITY_PATH,
+                            ConstVal.ENTITY);
+                } else {
+                    setPathInfo(pathInfo, template.getEntity(getGlobalConfig().isKotlin()), outputDir, ConstVal.ENTITY_PATH, ConstVal.ENTITY);
+                }
             }
-            if (template.getMapperIsGenerator()){
-                setPathInfo(pathInfo, template.getMapper(), outputDir, ConstVal.MAPPER_PATH, ConstVal.MAPPER);
-                setPathInfo(pathInfo, template.getXml(), outputDir, ConstVal.XML_PATH, ConstVal.XML);
+            if (template.getMapperIsGenerator()) {
+                if (CollectionUtils.isNotEmpty(outputDirs) && StringUtils.isNotEmpty(outputDirs.get("mapper"))) {
+                    setPathInfo(pathInfo, template.getMapper(), outputDirs.get("mapper"), ConstVal.MAPPER_PATH, ConstVal.MAPPER);
+                    setPathInfo(pathInfo, template.getXml(), outputDirs.get("mapper"), ConstVal.XML_PATH, ConstVal.XML);
+                } else {
+                    setPathInfo(pathInfo, template.getMapper(), outputDir, ConstVal.MAPPER_PATH, ConstVal.MAPPER);
+                    setPathInfo(pathInfo, template.getXml(), outputDir, ConstVal.XML_PATH, ConstVal.XML);
+                }
             }
-            if (template.getServiceIsGenerator()){
-                setPathInfo(pathInfo, template.getService(), outputDir, ConstVal.SERVICE_PATH, ConstVal.SERVICE);
-                setPathInfo(pathInfo, template.getServiceImpl(), outputDir, ConstVal.SERVICE_IMPL_PATH, ConstVal.SERVICE_IMPL);
+            if (template.getServiceIsGenerator()) {
+                if (CollectionUtils.isNotEmpty(outputDirs) && StringUtils.isNotEmpty(outputDirs.get("service"))) {
+                    setPathInfo(pathInfo, template.getService(), outputDirs.get("service"), ConstVal.SERVICE_PATH, ConstVal.SERVICE);
+                    setPathInfo(pathInfo, template.getServiceImpl(), outputDirs.get("service"), ConstVal.SERVICE_IMPL_PATH, ConstVal.SERVICE_IMPL);
+                } else {
+                    setPathInfo(pathInfo, template.getService(), outputDir, ConstVal.SERVICE_PATH, ConstVal.SERVICE);
+                    setPathInfo(pathInfo, template.getServiceImpl(), outputDir, ConstVal.SERVICE_IMPL_PATH, ConstVal.SERVICE_IMPL);
+                }
             }
-            if (template.getControllerIsGenerator()){
-                setPathInfo(pathInfo, template.getController(), outputDir, ConstVal.CONTROLLER_PATH, ConstVal.CONTROLLER);
+            if (template.getControllerIsGenerator()) {
+                if (CollectionUtils.isNotEmpty(outputDirs) && StringUtils.isNotEmpty(outputDirs.get("controller"))) {
+                    setPathInfo(pathInfo, template.getController(), outputDirs.get("controller"), ConstVal.CONTROLLER_PATH, ConstVal.CONTROLLER);
+                } else {
+                    setPathInfo(pathInfo, template.getController(), outputDir, ConstVal.CONTROLLER_PATH, ConstVal.CONTROLLER);
+
+                }
             }
-            if (template.getDtoIsGenerator()){
-                setPathInfo(pathInfo, template.getReqDto(), outputDir, ConstVal.REQDTO_PATH, ConstVal.REQDTO);
-                setPathInfo(pathInfo, template.getRespDto(), outputDir, ConstVal.RESPDTO_PATH, ConstVal.RESPDTO);
+            if (template.getDtoIsGenerator()) {
+                if (CollectionUtils.isNotEmpty(outputDirs) && StringUtils.isNotEmpty(outputDirs.get("dto"))) {
+                    setPathInfo(pathInfo, template.getReqDto(), outputDirs.get("dto"), ConstVal.REQDTO_PATH, ConstVal.REQDTO);
+                    setPathInfo(pathInfo, template.getRespDto(), outputDirs.get("dto"), ConstVal.RESPDTO_PATH, ConstVal.RESPDTO);
+                } else {
+                    setPathInfo(pathInfo, template.getReqDto(), outputDir, ConstVal.REQDTO_PATH, ConstVal.REQDTO);
+                    setPathInfo(pathInfo, template.getRespDto(), outputDir, ConstVal.RESPDTO_PATH, ConstVal.RESPDTO);
+                }
             }
-            if (template.getFacadeIsGenerator()){
-                setPathInfo(pathInfo, template.getFacade(), outputDir, ConstVal.FACADE_PATH, ConstVal.FACADE);
-                setPathInfo(pathInfo, template.getFacadeImpl(), outputDir, ConstVal.FACADE_IMPL_PATH, ConstVal.FACADE_IMPL);
+            if (template.getFacadeIsGenerator()) {
+                if (CollectionUtils.isNotEmpty(outputDirs) && StringUtils.isNotEmpty(outputDirs.get("facade"))) {
+                    setPathInfo(pathInfo, template.getFacade(), outputDirs.get("facade"), ConstVal.FACADE_PATH, ConstVal.FACADE);
+                } else {
+                    setPathInfo(pathInfo, template.getFacade(), outputDir, ConstVal.FACADE_PATH, ConstVal.FACADE);
+                }
+                // facadeImpl和facade是分开的
+                if (CollectionUtils.isNotEmpty(outputDirs) && StringUtils.isNotEmpty(outputDirs.get("facadeImpl"))) {
+                    setPathInfo(pathInfo, template.getFacadeImpl(), outputDirs.get("facadeImpl"), ConstVal.FACADE_IMPL_PATH, ConstVal.FACADE_IMPL);
+                } else {
+                    setPathInfo(pathInfo, template.getFacadeImpl(), outputDir, ConstVal.FACADE_IMPL_PATH, ConstVal.FACADE_IMPL);
+                }
             }
-            if (template.getMainServiceIsGenerator()){
-                setPathInfo(pathInfo, template.getMainService(), outputDir, ConstVal.MAIN_SERVICE_PATH, ConstVal.MAIN_SERVICE);
-                setPathInfo(pathInfo, template.getMainServiceImpl(), outputDir, ConstVal.MAIN_SERVICE_IMPL_PATH, ConstVal.MAIN_SERVICE_IMPL);
+            if (template.getMainServiceIsGenerator()) {
+                if (CollectionUtils.isNotEmpty(outputDirs) && StringUtils.isNotEmpty(outputDirs.get("mainService"))) {
+                    setPathInfo(pathInfo, template.getMainService(), outputDirs.get("mainService"), ConstVal.MAIN_SERVICE_PATH,
+                            ConstVal.MAIN_SERVICE);
+                    setPathInfo(pathInfo, template.getMainServiceImpl(), outputDirs.get("mainService"), ConstVal.MAIN_SERVICE_IMPL_PATH,
+                            ConstVal.MAIN_SERVICE_IMPL);
+                } else {
+                    setPathInfo(pathInfo, template.getMainService(), outputDir, ConstVal.MAIN_SERVICE_PATH, ConstVal.MAIN_SERVICE);
+                    setPathInfo(pathInfo, template.getMainServiceImpl(), outputDir, ConstVal.MAIN_SERVICE_IMPL_PATH, ConstVal.MAIN_SERVICE_IMPL);
+                }
             }
         }
     }
@@ -301,8 +357,13 @@ public class ConfigBuilder {
      * @param config DataSourceConfig
      */
     private void handlerDataSource(DataSourceConfig config) {
-        connection = config.getConn();
-        dbQuery = config.getDbQuery();
+        try {
+            connection = config.getConn();
+            dbQuery = config.getDbQuery();
+        } catch (BusinessException b) {
+            throw new BusinessException(b.getCode());
+        }
+
     }
 
     /**
@@ -756,7 +817,6 @@ public class ConfigBuilder {
         }
         return parent + StringPool.DOT + subPackage;
     }
-
 
     /**
      * 处理字段名称

@@ -15,6 +15,7 @@
  */
 package com.minivision.plus.generator.config;
 
+import com.minivision.common.framework.facade.exception.BusinessException;
 import com.minivision.plus.annotation.DbType;
 import com.minivision.plus.core.toolkit.ExceptionUtils;
 import com.minivision.plus.generator.config.converts.DB2TypeConvert;
@@ -31,6 +32,7 @@ import com.minivision.plus.generator.config.querys.OracleQuery;
 import com.minivision.plus.generator.config.querys.PostgreSqlQuery;
 import com.minivision.plus.generator.config.querys.SqlServerQuery;
 import com.minivision.plus.generator.config.querys.SqliteQuery;
+import com.minivision.plus.generator.config.util.JsonUtil;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
@@ -191,6 +193,10 @@ public class DataSourceConfig {
         return typeConvert;
     }
 
+    private static final String CLASS_NOT_FOUND = "10000001";
+
+    private static final String SQL_ERROR = "10000001";
+
     /**
      * 创建数据库连接对象
      *
@@ -201,8 +207,10 @@ public class DataSourceConfig {
         try {
             Class.forName(driverName);
             conn = DriverManager.getConnection(url, username, password);
-        } catch (ClassNotFoundException | SQLException e) {
-            e.printStackTrace();
+        } catch (ClassNotFoundException c) {
+           throw new BusinessException(CLASS_NOT_FOUND);
+        } catch (SQLException e){
+            throw new BusinessException(SQL_ERROR);
         }
         return conn;
     }
