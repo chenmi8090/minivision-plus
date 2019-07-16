@@ -642,8 +642,7 @@ public class ConfigBuilder {
                 notExistTables.remove(tabInfo.getName());
             }
             if (notExistTables.size() > 0) {
-                System.err.println("表 " + notExistTables + " 在数据库中不存在！！！");
-                throw new MybatisPlusException("表 " + notExistTables + " 在数据库中不存在！！！");
+                throw new BusinessException("90004");
             }
 
             // 需要反向生成的表信息
