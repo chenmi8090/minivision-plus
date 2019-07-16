@@ -117,8 +117,10 @@ public class AutoGenerator {
             logger.debug("==========================文件生成完成！！！==========================");
             // 返回文件目录
             return open;
-        } catch (Exception b) {
-            return JsonUtil.getErrorJson4data(b);
+        } catch (BusinessException e) {
+            throw new BusinessException(e.getCode());
+        } catch (Exception e) {
+            return JsonUtil.getErrorJson4data(e);
         }
     }
 
